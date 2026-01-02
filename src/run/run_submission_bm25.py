@@ -12,7 +12,7 @@ from src.utils import load_topic_file, generate_submission
 from src.components.weaviate_conn import connect_weaviate_local
 
 def main():
-    print(f"Generating dummy submission file...")
+    print(f"Generating submission file...")
 
     TOP_K = 100
 
@@ -29,7 +29,7 @@ def main():
     for idx, row in tqdm(topics_df.iterrows(), total=len(topics_df), desc="Generating results"):
         topic_id = row['topic-id']
 
-        query_text = f"{row['query']} {row['question']} {row['narrative']}"
+        query_text = f"{row['query']} {row['question']}"
 
         # Get top N documents
         response = collection.query.bm25(
