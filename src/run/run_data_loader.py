@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from src.components.data_loader import WeaviateDataLoader
-from src.components.weaviate_db import connect_weaviate_local
+from components.weaviate_conn import connect_weaviate_local
 from src.utils import read_file
 
 
@@ -51,6 +51,8 @@ def run_load_data_to_weaviate():
     DATA_PATH = "data/metadata.csv"
     
     df = read_file(filepath=DATA_PATH)
+    df = df.replace({np.nan: None}) # type: ignore
+    df = df[["cord_uid", "title", "abstract"]]  # Chỉ lấy các cột cần thiết
 
     print(f"Data loaded from {DATA_PATH}, number of records: {len(df)}")
 
@@ -80,7 +82,7 @@ def run_load_data_to_weaviate():
 
 
     # Limit documents for testing
-    documents = documents[:1000]
+    # documents = documents[:1000]
 
 
     client = connect_weaviate_local()

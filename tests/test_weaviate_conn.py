@@ -1,4 +1,4 @@
-from components.weaviate_db import connect_weaviate_local
+from components.weaviate_conn import connect_weaviate_local
 
 def test_connect_weaviate_local():
     client = connect_weaviate_local()

@@ -10,7 +10,7 @@ sys.path.insert(0, __root__)
 load_dotenv()
 
 from src.components.data_loader import WeaviateDataLoader
-from components.weaviate_db import connect_weaviate_local
+from components.weaviate_conn import connect_weaviate_local
 
 def test_weaviate_data_loader():
 
