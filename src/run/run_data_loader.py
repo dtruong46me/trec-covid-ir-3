@@ -9,8 +9,11 @@ from langchain_core.documents import Document
 import numpy as np
 import pandas as pd
 
+__root__ = os.getcwd()
+sys.path.insert(0, __root__)
+
 from src.components.data_loader import WeaviateDataLoader
-from components.weaviate_conn import connect_weaviate_local
+from src.components.weaviate_conn import connect_weaviate_local
 from src.utils import read_file
 
 
@@ -48,7 +51,7 @@ def process_dataframe_chunk(df_chunk: pd.DataFrame) -> List[Document]:
 # BƯỚC 2: SỬA LẠI HÀM MAIN
 # -----------------------------------------------------------------
 def run_load_data_to_weaviate():
-    DATA_PATH = "data/metadata.csv"
+    DATA_PATH = os.path.join(__root__, "data", "raw", "CORD_19", "metadata.csv")
     
     df = read_file(filepath=DATA_PATH)
     df = df.replace({np.nan: None}) # type: ignore
@@ -100,7 +103,7 @@ def run_load_data_to_weaviate():
     )
 
 
-    COLLECTION_NAME = "TrecCovidIR291025"
+    COLLECTION_NAME = "TREC_COVID_OpenAIEmbed_small"
     collection = wv_data_loader.init_collection(
         collection_name=COLLECTION_NAME,
         schema={
@@ -109,6 +112,8 @@ def run_load_data_to_weaviate():
             "abstract": str,
         }
     )
+
+    # documents = documents[:50]  # Giới hạn để test
 
     wv_data_loader.insert_data(
         collection=collection,
