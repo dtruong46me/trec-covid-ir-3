@@ -1,5 +1,6 @@
 from typing import List, Type
 
+import pandas as pd
 import weaviate.classes as wvc
 from langchain_core.documents import Document
 from langchain_core.embeddings.embeddings import Embeddings
@@ -61,7 +62,7 @@ class WeaviateDataLoader:
             for key, value in schema.items()
         ]
 
-        print(f"Creating collection '{collection_name}' with properties: {weaviate_properties}")
+        print(f"Creating collection '{collection_name}' with properties:\n{schema}")
         collection = self.client.collections.create(
             name=collection_name,
             properties=weaviate_properties,
@@ -127,3 +128,37 @@ class WeaviateDataLoader:
         # The `with` block ends, Weaviate will automatically send the last batch (if any)
         print(f"Data insertion complete.")
         print(f"Tổng số objects trong collection '{collection.name}': {collection.aggregate.over_all(total_count=True).total_count}")
+
+    def insert_data_no_embedding(self, collection: Collection, documents: List[Document], batch_size: int = 128) -> None:
+        """
+        Insert documents into Weaviate without generating embeddings.
+        
+        Args:
+            collection (Collection): The Weaviate collection to insert data into.
+            documents (List[Document]): A list of Document objects to be inserted.
+            batch_size (int): The number of documents to process in each batch. Default is 128.
+        Returns:
+            None
+        """
+        print(f"Inserting {len(documents)} documents into collection '{collection.name}' (without embeddings)...")
+        
+        # Sử dụng Batch Insert để đẩy nhanh
+        with collection.batch.dynamic() as batch:
+            for doc_batch in tqdm(
+                self._doc_generator(documents, bs=batch_size),
+                total=(len(documents) + batch_size - 1) // batch_size,
+                desc="Inserting Batches"
+            ):
+                for doc in doc_batch:
+                    data_object = {
+                        "content": doc.page_content,
+                        **doc.metadata  # Add all metadata (e.g., cord_uid, title, abstract...)
+                    }
+                    batch.add_object(properties=data_object)
+                
+        print("Data ingestion complete!")
+        print(f"Total objects in collection '{collection.name}': {collection.aggregate.over_all(total_count=True).total_count}")
+
+    def _doc_generator(self, docs: List[Document], bs: int):
+        for i in range(0, len(docs), bs):
+            yield docs[i : i + bs]
