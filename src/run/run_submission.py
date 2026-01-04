@@ -1,6 +1,7 @@
 import os
 import sys
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Literal
+from pydantic import BaseModel, Field
 
 import pandas as pd
 from tqdm import tqdm
@@ -211,21 +212,51 @@ def run_retrieval_pipeline(
     print(f"\n✓ Submission file generated successfully!")
 
 
+class SearchConfig(BaseModel):
+    search_method: Literal["bm25", "vector", "hybrid"] = Field(
+        description="Search method to use", 
+        default="hybrid"
+    )
+    alpha: float = Field(
+        description="Alpha parameter for hybrid search (0.0=BM25, 1.0=vector)",
+        default=0.5
+    )
+    top_k: int = Field(
+        description="Number of documents to retrieve",
+        default=100
+    )
+    top_k_rerank: int = Field(
+        description="Number of documents after reranking",
+        default=20
+    )
+    use_reranker: bool = Field(
+        description="Enable/disable Voyage AI reranker",
+        default=True
+    )
+    collection_name: str = Field(
+        description="Name of the collection to search",
+        default="TREC_COVID_OpenAIEmbed_small"
+    )
+
+
 def main():
     # ==========================================
     # CONFIGURATION
     # ==========================================
-    CONFIG = {
-        "search_method": "hybrid",  # Options: "bm25", "vector", "hybrid"
-        "alpha": 0.5,               # For hybrid: 0.0=BM25, 1.0=vector, 0.5=balanced
-        "top_k": 100,               # Number of documents to retrieve
-        "top_k_rerank": 20,         # Number of documents after reranking
-        "use_reranker": True,       # Enable/disable Voyage AI reranker
-        "collection_name": "TREC_COVID_OpenAIEmbed_small"
-    }
-    # ==========================================
 
-    run_retrieval_pipeline(**CONFIG)
+    search_config = SearchConfig(
+        search_method="hybrid",
+        alpha=0.4,
+        top_k=100,
+        top_k_rerank=20,
+        use_reranker=False,
+        collection_name="TREC_COVID_OpenAIEmbed_small"
+    )
+
+    # Convert search_config into dictionary
+    config_dict = search_config.model_dump()
+
+    run_retrieval_pipeline(**config_dict)
 
 
 if __name__ == "__main__":
